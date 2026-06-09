@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  stump:
+    image: aaronleopold/stump:latest
+    container_name: stump
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - /volume1/docker/booklore/Books:/data:ro
+      - /volume1/docker/booklore/config:/config
+    ports:
+      - "5050:10801"
+    restart: unless-stopped
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

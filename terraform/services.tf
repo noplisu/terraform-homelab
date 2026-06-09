@@ -1,7 +1,8 @@
-resource "cloudflare_record" "homelab" {
+resource "cloudflare_dns_record" "books" {
   zone_id = var.cloudflare_zone_id
   name    = "books"
   type    = "CNAME"
-  value   = cloudflare_zero_trust_tunnel_cloudflared.homelab.cname
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
   proxied = true
+  ttl     = 1
 }

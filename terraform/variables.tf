@@ -12,10 +12,15 @@ variable "cloudflare_zone_id" {
   type = string
 }
 
-variable "cloudflare_tunnel_secret" {
+variable "domain" {
   type = string
 }
 
-variable "domain" {
+variable "portainer_url" {
   type = string
+}
+
+variable "portainer_api_key" {
+  type = string
+  sensitive = true
 }

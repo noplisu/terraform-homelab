@@ -1,7 +1,7 @@
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homelab" {
   account_id = var.cloudflare_account_id
   name       = "homelab"
-  secret     = var.cloudflare_tunnel_secret
+  config_src = "cloudflare"
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
@@ -18,4 +18,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
       }
     ]
   }
+}
+
+data "cloudflare_zero_trust_tunnel_cloudflared_token" "homelab" {
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homelab.id
 }
