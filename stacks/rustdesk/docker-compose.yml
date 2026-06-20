@@ -1,0 +1,24 @@
+services:
+  hbbs:
+    container_name: hbbs
+    image: rustdesk/rustdesk-server:latest
+    command: hbbs
+    volumes:
+      - /volume1/docker/rustdesk-server/data:/root
+    network_mode: host
+    depends_on:
+      - hbbr
+    restart: always
+
+  hbbr:
+    container_name: hbbr
+    image: rustdesk/rustdesk-server:latest
+    command: hbbr
+    volumes:
+      - /volume1/docker/rustdesk-server/data:/root
+    network_mode: host
+    restart: always
+
+# host network — not on homelab; no Cloudflare tunnel
+# Data path kept from old Container Manager project (rustdesk-server)
+# ports: 21115 TCP, 21116 TCP/UDP, 21117 TCP
