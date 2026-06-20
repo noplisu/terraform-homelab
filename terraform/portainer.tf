@@ -18,6 +18,21 @@ resource "portainer_stack" "stump" {
   depends_on = [portainer_docker_network.homelab]
 }
 
+resource "portainer_stack" "gitea" {
+  name            = "gitea"
+  deployment_type = "standalone"
+  method          = "file"
+  endpoint_id     = data.portainer_environment.synology.id
+  stack_file_path = "${path.module}/../stacks/gitea/docker-compose.yml"
+
+  env {
+    name  = "GITEA_ROOT_URL"
+    value = "https://gitea.${var.domain}/"
+  }
+
+  depends_on = [portainer_docker_network.homelab]
+}
+
 resource "portainer_stack" "cloudflared" {
   name            = "cloudflared"
   deployment_type = "standalone"

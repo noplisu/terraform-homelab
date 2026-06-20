@@ -14,6 +14,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
         service  = "http://stump:10801"
       },
       {
+        hostname = "gitea.${var.domain}"
+        service  = "http://gitea:3000"
+      },
+      {
         service = "http_status:404"
       }
     ]

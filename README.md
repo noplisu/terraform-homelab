@@ -123,6 +123,25 @@ Only services with ingress rules in `terraform/tunnels.tf` and DNS in `terraform
 | 502 on public URL | Both containers on `homelab`? Stump running? |
 | Stump works locally, not remotely | Cloudflare tunnel status (Healthy?) |
 | `terraform plan` drift | Avoid manual changes in Portainer/Cloudflare UI |
+| Stack/DNS already exists on apply | Import into state (see below) |
+
+### Importing existing resources
+
+If a service was created manually before Terraform managed it, import instead of recreating:
+
+```bash
+cd terraform
+
+# Portainer stack — ID from Portainer → Stacks → gitea (URL ends with /stack/<id>)
+terraform import portainer_stack.gitea <stack_id>
+
+# Cloudflare DNS — record ID from Cloudflare → DNS → gitea → API or dashboard
+terraform import cloudflare_dns_record.gitea '<zone_id>/<dns_record_id>'
+
+terraform plan   # should show no changes or only env/compose updates
+```
+
+Alternative: delete the manual stack/DNS record in the UI, then run `terraform apply` again.
 
 ## Security notes
 
