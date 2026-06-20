@@ -93,7 +93,10 @@ This will:
 | Service | Stack | Public URL | LAN | Network |
 |---------|-------|------------|-----|---------|
 | Stump | `stacks/stump/` | `https://books.<domain>` | `:5050` | `homelab` |
+| Gitea | `stacks/gitea/` | `https://gitea.<domain>` | `:3123` | `homelab` |
+| Yopass | `stacks/yopass/` | `https://secret.<domain>` | `:4040` | `homelab` |
 | cloudflared | `stacks/cloudflared/` | — | — | `homelab` |
+| RustDesk | `stacks/rustdesk/` | — | host ports | host |
 
 Only services with ingress rules in `terraform/tunnels.tf` and DNS in `terraform/services.tf` are reachable from the internet. Everything else stays on the LAN by default.
 

@@ -41,6 +41,23 @@ resource "portainer_stack" "rustdesk" {
   stack_file_path = "${path.module}/../stacks/rustdesk/docker-compose.yml"
 }
 
+resource "portainer_stack" "yopass" {
+  name            = "yopass"
+  deployment_type = "standalone"
+  method          = "file"
+  endpoint_id     = data.portainer_environment.synology.id
+  stack_file_path = "${path.module}/../stacks/yopass/docker-compose.yml"
+  pull_image      = true
+  prune           = true
+
+  env {
+    name  = "YOPASS_MEMCACHED"
+    value = "yopass-memcached:11211"
+  }
+
+  depends_on = [portainer_docker_network.homelab]
+}
+
 resource "portainer_stack" "cloudflared" {
   name            = "cloudflared"
   deployment_type = "standalone"

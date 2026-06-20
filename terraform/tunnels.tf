@@ -18,6 +18,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
         service  = "http://gitea:3000"
       },
       {
+        hostname = "secret.${var.domain}"
+        service  = "http://yopass:1337"
+      },
+      {
         service = "http_status:404"
       }
     ]
