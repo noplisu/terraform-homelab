@@ -146,15 +146,8 @@ terraform plan   # should show no changes or only env/compose updates
 
 Alternative: delete the manual stack/DNS record in the UI, then run `terraform apply` again.
 
-## Security notes
-
-- Do not commit `terraform.tfvars`, `*.tfstate`, or `.terraform/`
-- Consider [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/) on public hostnames
-- Rotate API tokens if they were ever exposed
-
 ## Roadmap
 
-- [ ] Cloudflare Access on `books.<domain>`
 - [ ] Migrate additional services to `stacks/`
 - [ ] Automate Portainer itself
 - [ ] CI/CD (e.g. Gitea Actions) for `terraform apply`
