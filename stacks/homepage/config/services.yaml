@@ -13,7 +13,7 @@
 
 - Public:
     - Books:
-        icon: mdi-book-open-page-variant
+        icon: stump.svg
         href: https://books.{{HOMEPAGE_VAR_DOMAIN}}
         description: Stump library
         siteMonitor: https://books.{{HOMEPAGE_VAR_DOMAIN}}
@@ -25,7 +25,7 @@
         siteMonitor: https://gitea.{{HOMEPAGE_VAR_DOMAIN}}
 
     - Secrets:
-        icon: mdi-lock-outline
+        icon: yopass.svg
         href: https://secret.{{HOMEPAGE_VAR_DOMAIN}}
         description: One-time secrets (Yopass)
         siteMonitor: https://secret.{{HOMEPAGE_VAR_DOMAIN}}
@@ -38,19 +38,19 @@
         siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/
 
     - Photos:
-        icon: mdi-image-multiple
+        icon: synology-photos.png
         href: https://{{HOMEPAGE_VAR_QC_HOST}}/photos/
         description: Synology Photos
         siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}/photos/
 
     - Drive:
-        icon: mdi-folder-cloud
+        icon: synology-drive.png
         href: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/drive/
         description: Synology Drive
         siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/drive/
 
     - Note Station:
-        icon: mdi-note-text
+        icon: synology-note-station.png
         href: https://{{HOMEPAGE_VAR_QC_HOST}}/note/
         description: Note Station
         siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}/note/
