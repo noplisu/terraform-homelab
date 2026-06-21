@@ -41,6 +41,9 @@ terraform-homelab/
 │   │   ├── docker-compose.yml
 │   │   ├── config/           # Dashboard YAML (synced to NAS)
 │   │   └── nginx/            # Basic auth reverse proxy config
+│   ├── gateway/
+│   │   ├── docker-compose.yml
+│   │   └── nginx/conf.d/     # LAN edge routing (synced to NAS)
 │   └── stump/
 │       └── docker-compose.yml
 └── terraform/
@@ -49,6 +52,8 @@ terraform-homelab/
     ├── tunnels.tf        # Tunnel, ingress, token
     ├── services.tf       # Public DNS records
     ├── portainer.tf      # Network + stack deployments
+    ├── homepage_sync.tf  # SSH sync for Homepage config/nginx
+    ├── gateway_sync.tf   # SSH sync for gateway nginx config
     └── terraform.tfvars  # Secrets (not committed)
 ```
 
@@ -77,8 +82,6 @@ Create `terraform/terraform.tfvars` with your values (see `terraform/variables.t
 | `portainer_api_key` | Portainer access token |
 | `nas_ssh_user` | Synology SSH user (Homepage config sync) |
 | `nas_ssh_password` | SSH password for that user (sensitive) |
-| `homepage_auth_user` | Homepage login (nginx basic auth) |
-| `homepage_auth_password` | Homepage password (sensitive) |
 | `nas_lan_ip` | IP of the Synology NAS
 
 Optional: `nas_ssh_port` (default `22`).
@@ -106,7 +109,8 @@ This will:
 | Stump | `stacks/stump/` | `https://books.<domain>` | `:5050` | `homelab` |
 | Gitea | `stacks/gitea/` | `https://gitea.<domain>` | `:3123` | `homelab` |
 | Yopass | `stacks/yopass/` | `https://secret.<domain>` | `:4040` | `homelab` |
-| Homepage | `stacks/homepage/` | — | `:7575` | default |
+| Homepage | `stacks/homepage/` | — | `:7575` or `*.local` | `homepage` |
+| Gateway | `stacks/gateway/` | — | `:8888` (edge) | host |
 | cloudflared | `stacks/cloudflared/` | — | — | `homelab` |
 | RustDesk | `stacks/rustdesk/` | — | host ports | host |
 
@@ -116,11 +120,59 @@ Only services with ingress rules in `terraform/tunnels.tf` and DNS in `terraform
 
 Dashboard layout lives in `stacks/homepage/config/` (YAML in Git). Nginx config lives in `stacks/homepage/nginx/`. `terraform apply` syncs both to the NAS over SSH and restarts the containers when files change.
 
-**Auth:** nginx on port `7575` prompts for HTTP basic auth before Homepage. Credentials are set via `homepage_auth_user` / `homepage_auth_password` in `terraform.tfvars` (injected into the nginx container at startup — not stored in Git).
-
 Domain and LAN IP in links come from Terraform env vars (`HOMEPAGE_VAR_DOMAIN`, `HOMEPAGE_VAR_NAS_IP`).
 
-LAN-only (no tunnel ingress). Access remotely via Tailscale to the NAS IP on port `7575`.
+LAN-only (no tunnel ingress). Access remotely via Tailscale to the NAS IP on port `7575`, or via the gateway hostname on port `80` (see below).
+
+#### LAN gateway (path routing)
+
+A **gateway nginx** on port **8888** routes traffic on a single mDNS hostname by path. No extra DNS required — use **`*.local`** (DSM server name).
+
+The gateway uses **`network_mode: host`** so it reaches Homepage and Web Station via `127.0.0.1` (Synology Docker does not expose published ports through `host.docker.internal`).
+
+```text
+Browser  →  *.local:80  (mDNS)
+              ↓
+       DSM reverse proxy  →  localhost:8888  (gateway-nginx, host network)
+              ↓
+       /phpmyadmin/*  →  Web Station (NAS IP :80)
+       /*             →  Homepage (127.0.0.1:7575)
+```
+
+| Path | Backend |
+|------|---------|
+| `/phpmyadmin/` | Web Station (`${nas_lan_ip}:80`) |
+| `/` | Homepage (`127.0.0.1:7575`) |
+
+Nginx config is `stacks/gateway/nginx/default.conf.tpl` (rendered with `nas_lan_ip`), synced to the NAS as a single file mount.
+
+**One-time setup (manual):**
+
+1. **DSM reverse proxy** — Control Panel → Login Portal → Reverse Proxy: source `*.local` port `80` → destination `localhost:8888`.
+2. **Remove** any rule that sent port 80 straight to Homepage `:7575`.
+3. If phpMyAdmin fails, confirm `http://<nas-ip>/phpmyadmin/` works directly — gateway proxies to DSM port `80`.
+
+Set in `terraform.tfvars`:
+
+```hcl
+homepage_lan_hostname = "*.local"
+```
+
+Direct access without the gateway still works at `http://<nas-ip>:7575`.
+
+#### LAN access (mDNS)
+
+**mDNS:** Your NAS broadcasts **`*.local`** from DSM → Control Panel → **Network** → server name. No router DNS or hosts file needed.
+
+Use **`http://*.local`** for Homepage and phpMyAdmin (via gateway on port 80), or **`http://*.local:7575`** for Homepage directly. Set `homepage_lan_hostname = "*.local"` in tfvars so dashboard links and `HOMEPAGE_ALLOWED_HOSTS` match.
+
+Override in `terraform.tfvars`:
+
+```hcl
+homepage_lan_hostname = "*.local"   # must match mDNS / browser Host header
+```
+
+Rename the NAS in DSM → the `.local` name changes too (then update this variable).
 
 #### Synology SSH for Terraform (one-time)
 
@@ -144,25 +196,15 @@ DSM → Control Panel → **User & Group** → Create:
 
 DSM → Control Panel → **Shared Folder** → `docker` → **Permissions** → give `terraform` **Read/Write**.
 
-**4. Test**
 
-```powershell
-ssh terraform@192.168.5.58 "echo YOUR_PASSWORD | sudo -S /usr/local/bin/docker ps --format '{{.Names}}'"
-```
 
-That should list containers without hanging (Terraform uses `sudo -S` + docker for config sync).
-
-Note: Synology Container Manager usually has **no `docker` Unix group** — skip `synogroup` if it errors with `SYNOGroupGet failed`.
-
-**5. Wire into Terraform**
+**4. Wire into Terraform**
 
 In `terraform.tfvars` (gitignored):
 
 ```hcl
-nas_ssh_user             = "terraform"
-nas_ssh_password         = "your-strong-password"
-homepage_auth_user     = "admin"
-homepage_auth_password = "your-homepage-password"
+nas_ssh_user     = "terraform"
+nas_ssh_password = "your-strong-password"
 ```
 
 **Security notes:** `terraform` is in `administrators` — config sync uses `sudo docker` (password from `nas_ssh_password`, base64-encoded in the remote script). Keep SSH LAN/Tailscale-only.

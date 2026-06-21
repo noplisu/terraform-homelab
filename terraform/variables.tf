@@ -52,13 +52,7 @@ variable "synology_quickconnect_host" {
   description = "Synology QuickConnect direct hostname (without https://)"
 }
 
-variable "homepage_auth_user" {
+variable "homepage_lan_hostname" {
   type        = string
-  description = "HTTP basic auth username for Homepage (nginx)"
-}
-
-variable "homepage_auth_password" {
-  type        = string
-  description = "HTTP basic auth password for Homepage (nginx). Do not commit."
-  sensitive   = true
+  description = "LAN hostname for Homepage and dashboard links. Empty falls back to nas_lan_ip."
 }

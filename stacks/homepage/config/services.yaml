@@ -58,7 +58,7 @@
 - Homelab:
     - Portainer:
         icon: portainer.png
-        href: http://{{HOMEPAGE_VAR_NAS_IP}}:9000
+        href: http://{{HOMEPAGE_VAR_LAN_HOST}}:9000
         description: Container management
         server: synology
         container: portainer
@@ -71,19 +71,19 @@
 
     - n8n:
         icon: n8n.png
-        href: http://{{HOMEPAGE_VAR_NAS_IP}}:5678
+        href: http://{{HOMEPAGE_VAR_LAN_HOST}}:5678
         description: Automation
         siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}:5678
 
     - NocoDB:
         icon: nocodb.png
-        href: http://{{HOMEPAGE_VAR_NAS_IP}}:8080
+        href: http://{{HOMEPAGE_VAR_LAN_HOST}}:8080
         description: Database UI
         siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}:8080
 
     - phpMyAdmin:
         icon: phpmyadmin.png
-        href: http://{{HOMEPAGE_VAR_NAS_IP}}/phpmyadmin/
+        href: http://{{HOMEPAGE_VAR_LAN_HOST}}/phpmyadmin/
         description: MariaDB admin
         siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}/phpmyadmin/
 
