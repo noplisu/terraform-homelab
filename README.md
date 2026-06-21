@@ -37,6 +37,10 @@ terraform-homelab/
 ├── stacks/
 │   ├── cloudflared/
 │   │   └── docker-compose.yml
+│   ├── homepage/
+│   │   ├── docker-compose.yml
+│   │   ├── config/           # Dashboard YAML (synced to NAS)
+│   │   └── nginx/            # Basic auth reverse proxy config
 │   └── stump/
 │       └── docker-compose.yml
 └── terraform/
@@ -71,6 +75,13 @@ Create `terraform/terraform.tfvars` with your values (see `terraform/variables.t
 | `domain` | Apex domain, e.g. `example.com` |
 | `portainer_url` | Portainer API URL, e.g. `http://192.168.x.x:9000` |
 | `portainer_api_key` | Portainer access token |
+| `nas_ssh_user` | Synology SSH user (Homepage config sync) |
+| `nas_ssh_password` | SSH password for that user (sensitive) |
+| `homepage_auth_user` | Homepage login (nginx basic auth) |
+| `homepage_auth_password` | Homepage password (sensitive) |
+| `nas_lan_ip` | IP of the Synology NAS
+
+Optional: `nas_ssh_port` (default `22`).
 
 ## Deploy
 
@@ -95,10 +106,66 @@ This will:
 | Stump | `stacks/stump/` | `https://books.<domain>` | `:5050` | `homelab` |
 | Gitea | `stacks/gitea/` | `https://gitea.<domain>` | `:3123` | `homelab` |
 | Yopass | `stacks/yopass/` | `https://secret.<domain>` | `:4040` | `homelab` |
+| Homepage | `stacks/homepage/` | — | `:7575` | default |
 | cloudflared | `stacks/cloudflared/` | — | — | `homelab` |
 | RustDesk | `stacks/rustdesk/` | — | host ports | host |
 
 Only services with ingress rules in `terraform/tunnels.tf` and DNS in `terraform/services.tf` are reachable from the internet. Everything else stays on the LAN by default.
+
+### Homepage config
+
+Dashboard layout lives in `stacks/homepage/config/` (YAML in Git). Nginx config lives in `stacks/homepage/nginx/`. `terraform apply` syncs both to the NAS over SSH and restarts the containers when files change.
+
+**Auth:** nginx on port `7575` prompts for HTTP basic auth before Homepage. Credentials are set via `homepage_auth_user` / `homepage_auth_password` in `terraform.tfvars` (injected into the nginx container at startup — not stored in Git).
+
+Domain and LAN IP in links come from Terraform env vars (`HOMEPAGE_VAR_DOMAIN`, `HOMEPAGE_VAR_NAS_IP`).
+
+LAN-only (no tunnel ingress). Access remotely via Tailscale to the NAS IP on port `7575`.
+
+#### Synology SSH for Terraform (one-time)
+
+Use a **dedicated user** — not your personal DSM account.
+
+**1. Enable SSH on the NAS**
+
+DSM → Control Panel → **Terminal & SNMP** → enable SSH (port 22). Do not forward port 22 on your router; LAN or Tailscale only.
+
+**2. Create user `terraform`**
+
+DSM → Control Panel → **User & Group** → Create:
+
+| Setting | Value |
+|---------|--------|
+| Username | `terraform` |
+| Password | Strong password (stored in `terraform.tfvars`) |
+| Groups | **administrators** — required on Synology for `docker` CLI via SSH |
+
+**3. Shared folder permission**
+
+DSM → Control Panel → **Shared Folder** → `docker` → **Permissions** → give `terraform` **Read/Write**.
+
+**4. Test**
+
+```powershell
+ssh terraform@192.168.5.58 "echo YOUR_PASSWORD | sudo -S /usr/local/bin/docker ps --format '{{.Names}}'"
+```
+
+That should list containers without hanging (Terraform uses `sudo -S` + docker for config sync).
+
+Note: Synology Container Manager usually has **no `docker` Unix group** — skip `synogroup` if it errors with `SYNOGroupGet failed`.
+
+**5. Wire into Terraform**
+
+In `terraform.tfvars` (gitignored):
+
+```hcl
+nas_ssh_user             = "terraform"
+nas_ssh_password         = "your-strong-password"
+homepage_auth_user     = "admin"
+homepage_auth_password = "your-homepage-password"
+```
+
+**Security notes:** `terraform` is in `administrators` — config sync uses `sudo docker` (password from `nas_ssh_password`, base64-encoded in the remote script). Keep SSH LAN/Tailscale-only.
 
 ## Adding a new public service
 
@@ -127,6 +194,7 @@ Only services with ingress rules in `terraform/tunnels.tf` and DNS in `terraform
 | Stump works locally, not remotely | Cloudflare tunnel status (Healthy?) |
 | `terraform plan` drift | Avoid manual changes in Portainer/Cloudflare UI |
 | Stack/DNS already exists on apply | Import into state (see below) |
+| Homepage sync docker `permission denied` | Use `sudo` on the NAS for docker/chown. One-time as admin: `sudo chown -R terraform:users /volume1/docker/homepage` (stop homepage stack first if it still fails) |
 
 ### Importing existing resources
 

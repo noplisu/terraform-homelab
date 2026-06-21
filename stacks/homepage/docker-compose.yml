@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v1.2.0
+    container_name: homepage
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS}
+      HOMEPAGE_VAR_DOMAIN: ${HOMEPAGE_VAR_DOMAIN}
+      HOMEPAGE_VAR_NAS_IP: ${HOMEPAGE_VAR_NAS_IP}
+      HOMEPAGE_VAR_QC_HOST: ${HOMEPAGE_VAR_QC_HOST}
+      HOMEPAGE_VAR_PORTAINER_ENV: ${HOMEPAGE_VAR_PORTAINER_ENV}
+      HOMEPAGE_VAR_PORTAINER_KEY: ${HOMEPAGE_VAR_PORTAINER_KEY}
+    volumes:
+      - /volume1/docker/homepage/config:/app/config
+    networks:
+      - homepage
+    depends_on:
+      - dockerproxy
+
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:latest
+    container_name: homepage-dockerproxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - "2375"
+    networks:
+      - homepage
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: homepage-nginx
+    restart: unless-stopped
+    ports:
+      - "7575:80"
+    environment:
+      AUTH_USER: ${HOMEPAGE_AUTH_USER}
+      AUTH_PASS: ${HOMEPAGE_AUTH_PASSWORD}
+    volumes:
+      - /volume1/docker/homepage/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - homepage
+    networks:
+      - homepage
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache apache2-utils >/dev/null
+        htpasswd -cb /etc/nginx/.htpasswd "$$AUTH_USER" "$$AUTH_PASS"
+        exec nginx -g 'daemon off;'
+
+networks:
+  homepage:
+    driver: bridge

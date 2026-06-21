@@ -1,0 +1,4 @@
+# Read-only Docker API via docker-socket-proxy in the homepage stack
+synology:
+  host: dockerproxy
+  port: 2375

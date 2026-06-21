@@ -58,6 +58,57 @@ resource "portainer_stack" "yopass" {
   depends_on = [portainer_docker_network.homelab]
 }
 
+resource "portainer_stack" "homepage" {
+  name            = "homepage"
+  deployment_type = "standalone"
+  method          = "file"
+  endpoint_id     = data.portainer_environment.synology.id
+  stack_file_path = "${path.module}/../stacks/homepage/docker-compose.yml"
+  pull_image      = true
+
+  env {
+    name  = "HOMEPAGE_ALLOWED_HOSTS"
+    value = "${var.nas_lan_ip},${var.nas_lan_ip}:7575,localhost,localhost:7575"
+  }
+
+  env {
+    name  = "HOMEPAGE_VAR_DOMAIN"
+    value = var.domain
+  }
+
+  env {
+    name  = "HOMEPAGE_VAR_NAS_IP"
+    value = var.nas_lan_ip
+  }
+
+  env {
+    name  = "HOMEPAGE_VAR_QC_HOST"
+    value = var.synology_quickconnect_host
+  }
+
+  env {
+    name  = "HOMEPAGE_VAR_PORTAINER_ENV"
+    value = data.portainer_environment.synology.id
+  }
+
+  env {
+    name  = "HOMEPAGE_VAR_PORTAINER_KEY"
+    value = var.portainer_api_key
+  }
+
+  env {
+    name  = "HOMEPAGE_AUTH_USER"
+    value = var.homepage_auth_user
+  }
+
+  env {
+    name  = "HOMEPAGE_AUTH_PASSWORD"
+    value = var.homepage_auth_password
+  }
+
+  depends_on = [null_resource.homepage_config]
+}
+
 resource "portainer_stack" "cloudflared" {
   name            = "cloudflared"
   deployment_type = "standalone"

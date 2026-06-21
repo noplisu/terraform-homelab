@@ -1,0 +1,94 @@
+- External:
+    - Portfolio:
+        icon: mdi-web
+        href: https://noplisu.com
+        description: Personal site
+        siteMonitor: https://noplisu.com
+
+    - Bookmantic:
+        icon: mdi-book-open-variant
+        href: https://bookmantic.com
+        description: Book site
+        siteMonitor: https://bookmantic.com
+
+- Public:
+    - Books:
+        icon: mdi-book-open-page-variant
+        href: https://books.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Stump library
+        siteMonitor: https://books.{{HOMEPAGE_VAR_DOMAIN}}
+
+    - Gitea:
+        icon: gitea.png
+        href: https://gitea.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Git hosting
+        siteMonitor: https://gitea.{{HOMEPAGE_VAR_DOMAIN}}
+
+    - Secrets:
+        icon: mdi-lock-outline
+        href: https://secret.{{HOMEPAGE_VAR_DOMAIN}}
+        description: One-time secrets (Yopass)
+        siteMonitor: https://secret.{{HOMEPAGE_VAR_DOMAIN}}
+
+- Synology:
+    - DSM:
+        icon: synology-dsm.png
+        href: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/
+        description: DiskStation Manager
+        siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/
+
+    - Photos:
+        icon: mdi-image-multiple
+        href: https://{{HOMEPAGE_VAR_QC_HOST}}/photos/
+        description: Synology Photos
+        siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}/photos/
+
+    - Drive:
+        icon: mdi-folder-cloud
+        href: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/drive/
+        description: Synology Drive
+        siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}:5001/drive/
+
+    - Note Station:
+        icon: mdi-note-text
+        href: https://{{HOMEPAGE_VAR_QC_HOST}}/note/
+        description: Note Station
+        siteMonitor: https://{{HOMEPAGE_VAR_QC_HOST}}/note/
+
+- Homelab:
+    - Portainer:
+        icon: portainer.png
+        href: http://{{HOMEPAGE_VAR_NAS_IP}}:9000
+        description: Container management
+        server: synology
+        container: portainer
+        widget:
+          type: portainer
+          url: http://{{HOMEPAGE_VAR_NAS_IP}}:9000
+          env: {{HOMEPAGE_VAR_PORTAINER_ENV}}
+          key: {{HOMEPAGE_VAR_PORTAINER_KEY}}
+          fields: ["running", "stopped", "total"]
+
+    - n8n:
+        icon: n8n.png
+        href: http://{{HOMEPAGE_VAR_NAS_IP}}:5678
+        description: Automation
+        siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}:5678
+
+    - NocoDB:
+        icon: nocodb.png
+        href: http://{{HOMEPAGE_VAR_NAS_IP}}:8080
+        description: Database UI
+        siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}:8080
+
+    - phpMyAdmin:
+        icon: phpmyadmin.png
+        href: http://{{HOMEPAGE_VAR_NAS_IP}}/phpmyadmin/
+        description: MariaDB admin
+        siteMonitor: http://{{HOMEPAGE_VAR_NAS_IP}}/phpmyadmin/
+
+    - Cloudflared:
+        icon: cloudflare.png
+        description: Tunnel connector
+        server: synology
+        container: cloudflared
